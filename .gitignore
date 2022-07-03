@@ -1,1 +1,5 @@
-.env
+**/.env
+.terraform*
+terraform.tfstate*
+image-metadata.json
+my-settings.auto.tfvars
