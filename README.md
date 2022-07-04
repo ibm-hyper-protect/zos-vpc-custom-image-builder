@@ -6,7 +6,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 
 1. [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
 2. `cp my-settings.auto.tfvars-template my-settings.auto.tfvars`
-3. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars)
+3. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars-template)
    - set `ibmcloud_api_key=<your API key>.
       - this will likelly require a paying account
       - you can create an API account by visiting the [IBM Cloud API keys page](https://cloud.ibm.com/iam/apikeys). Ensure you have
@@ -19,7 +19,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 ## Running
 
 1. Use the Wazi image builder to upload your z/OS image to IBM Cloud Object Store (COS)
-2. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars) with the name of the COS bucket
+2. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars-template) with the name of the COS bucket
 3. `terraform apply` - this will create the VSI with the required data volumes
 4. Follow the [data_mover](data_mover/README.md) instructions to download the ECKD disks from COS to VPC volumes
    - **TBD**: this script will be executed from Terraform in following versions
