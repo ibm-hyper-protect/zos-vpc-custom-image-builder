@@ -11,33 +11,58 @@ resource "ibm_is_subnet" "subnet" {
   total_ipv4_address_count = var.total_ipv4_address_count
 }
 
+# ssh key
+resource "ibm_is_ssh_key" "sshkey" {
+  name      = var.ssh_public_key_name
+  public_key = local.ssh_public_key
+}
+
+# security group
+resource "ibm_is_security_group" "security_group" {
+    name = var.mover_vsi_name
+    vpc = ibm_is_vpc.vpc.id
+}
+
+# Configure Security Group Rule to open SSH
+resource "ibm_is_security_group_rule" "security_group_rule_ssh" {
+    group = ibm_is_security_group.security_group.id
+    direction = "inbound"
+    depends_on = [ibm_is_security_group.security_group]    
+    tcp {
+      port_min = 22
+      port_max = 22
+    }
+ }
+resource "ibm_is_security_group_rule" "security_group_rule_outbound" {
+    group = ibm_is_security_group.security_group.id
+    direction = "outbound"
+    depends_on = [ibm_is_security_group.security_group]   
+ }
+
 # Images
 data "ibm_is_images" "vpc_images" {
 }
 locals {
-  image = [for image in data.ibm_is_images.vpc_images.images : image if length(regexall(var.image_name, image.name)) > 0][0]
+  mover_image = [for image in data.ibm_is_images.vpc_images.images : image if length(regexall(var.mover_image_name, image.name)) > 0][0]
 }
 
 # vsi
 resource "ibm_is_instance" "vsi" {
-  name    = var.vsi_name
-  image   = local.image.id
-  profile = var.profile
+  name    = var.mover_vsi_name
+  image   = local.mover_image.id
+  profile = var.mover_profile
   metadata_service_enabled  = true
 
   primary_network_interface {
     subnet = ibm_is_subnet.subnet.id
+    security_groups = [ibm_is_security_group.security_group.id]
   }
 
   vpc  = ibm_is_vpc.vpc.id
   zone = "${var.region}-${var.zone}"
   keys = [ibm_is_ssh_key.sshkey.id]
 
-  user_data = <<EOF
-#cloud-config
-packages:
- - jq
-EOF
+  user_data = sensitive(data.cloudinit_config.config.rendered)
 }
 
 #Volumes
@@ -57,35 +82,36 @@ resource "ibm_is_instance_volume_attachment" "zos_volumes" {
 }
 
 
-# DEBUG ONLY - SSH enablement
-
 # Floating IP
 resource "ibm_is_floating_ip" "floatingip" {
-  name   = "testfip1"
+  name   = var.mover_vsi_name
   target = ibm_is_instance.vsi.primary_network_interface[0].id
 }
 
+resource "time_sleep" "wait_for_cloudinit" {
+  depends_on = [
+    ibm_is_floating_ip.floatingip,
+    ibm_is_instance.vsi
+  ]
 
-# ssh key
-resource "ibm_is_ssh_key" "sshkey" {
-  name      = var.ssh_public_key_name
-  public_key = file(var.ssh_public_key)
+  create_duration = "0s"
+
+  triggers = {
+    vsi_id = ibm_is_instance.vsi.id
+  }
+
+  # Establishes connection to be used by all
+  # generic remote provisioners (i.e. file/remote-exec)
+  connection {
+    type     = "ssh"
+    user     = "root"
+    host     = ibm_is_floating_ip.floatingip.address
+    private_key = local.ssh_private_key
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "cloud-init status --wait",
+    ]
+  }
 }
-
-# security group
-resource "ibm_is_security_group" "security_group" {
-    name = "test"
-    vpc = ibm_is_vpc.vpc.id
-}
-
-# Configure Security Group Rule to open SSH
-resource "ibm_is_security_group_rule" "security_group_rule_ssh" {
-    group = ibm_is_security_group.security_group.id
-    direction = "inbound"
-    remote = "0.0.0.0"
-    depends_on = [ibm_is_security_group.security_group]
-    # tcp {
-    #   port_min = 22
-    #   port_max = 22
-    # }
- }

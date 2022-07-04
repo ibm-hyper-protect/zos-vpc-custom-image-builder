@@ -8,6 +8,10 @@ terraform {
       source = "IBM-Cloud/ibm"
       version = "~> 1.42.0"
     }
+    cloudinit = {
+      source = "hashicorp/cloudinit"
+      version = "2.2.0"
+    }
   }
 }
 
@@ -15,4 +19,8 @@ terraform {
 provider "ibm" {
   ibmcloud_api_key      = var.ibmcloud_api_key
   region = var.region
+}
+
+provider "cloudinit" {
+  # Configuration options
 }

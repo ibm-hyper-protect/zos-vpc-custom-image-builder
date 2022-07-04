@@ -3,3 +3,5 @@
 terraform.tfstate*
 image-metadata.json
 my-settings.auto.tfvars
+data_mover.zip
+.DS_Store

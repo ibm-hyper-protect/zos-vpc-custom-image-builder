@@ -8,6 +8,11 @@ variable "zone" {
   default = "1"
 }
 
+# z/OS Custom image name
+variable "custom_image_name" {
+  default = "wazi-custom-image"
+}
+
 # z/OS Volume name prefix
 variable "volume_prefix" {
   default = "wazi-custom-image"
@@ -20,7 +25,7 @@ variable "volume_purpose" {
 }
 
 # VSI name
-variable "vsi_name" {
+variable "mover_vsi_name" {
   default = "wazi-custom-image-build"
 }
 
@@ -51,8 +56,11 @@ variable "ssh_public_key_name" {
   default = "wazi-custom-image"
 }
 
+variable "ssh_private_key" {
+  default = "~/.ssh/id_rsa" # If this file does not exist, a terraform generated key is used
+}
 variable "ssh_public_key" {
-  default = "~/.ssh/id_rsa.pub"
+  default = "~/.ssh/id_rsa.pub" # If this file does not exist, a terraform generated key is used
 }
 
 variable "subnetwork_name" {
@@ -63,12 +71,12 @@ variable "total_ipv4_address_count" {
     default = 256
 }
 
-variable "image_name" {
+variable "mover_image_name" {
   # Regular expresions allowed
   default = ".*ubuntu.*"
 }
 
-variable "profile" {
+variable "mover_profile" {
   default = "bx2d-16x64"
 }
 

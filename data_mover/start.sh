@@ -41,7 +41,7 @@ data_volumes="/data-volumes/"
 boot_volume_device="/dev/$(lsblk | awk -v size="${volume_size}" '$6=="disk"&&$4==size{print $1}' | awk 'FNR==1{print $1}')"
 data_volume_device="/dev/$(lsblk | awk -v size="${volume_size}" '$6=="disk"&&$4==size{print $1}' | awk 'FNR==2{print $1}')"
 
-apt install -y python3 python3-pip guestfs-tools parted
+apt install -y python3 python3-pip libguestfs-tools parted
 
 pip3 install --no-cache-dir -r "${project_dir}requirements.txt"
 

@@ -7,14 +7,8 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 
 
 1. ssh into the VSI you created with Terraform
-2. Copy the contents of this repo to the Linux VSI, e.g.,
-
-    ```bash
-        git clone https://github.com/ibm-hyper-protect/zos-vpc-custom-image-builder
-        cd zos-vpc-custom-image-builder
-    ```
-4. See _Configuration_ below for environment variables to set (or, parameters in a `.env` file).
-
+2. `cd /data_mover`
+3. If you did not create the VSI with Terraform you will need to create an `.env` file with the COS configuration (see bellow)
 4. Run `start.sh` from the clean Linux VSI to install the dependencies, mount the attached block storage instances, and then run the data mover script, and create a qcow2 file.
 
 ## Deployment
