@@ -11,6 +11,8 @@ from pathlib import Path
 import requests
 import shlex
 import subprocess
+import gzip
+import shutil
 
 load_dotenv()
 
@@ -126,17 +128,14 @@ def get_volume_file(volume):
         output_directory = instance_volumes[name]["mount_path"] + "/"
 
 
-    if volume['compression'] == 'gzip':
-        output_file = output_directory + volume['name'] + '.gz'
-        cos_file = get_item(COS_BUCKET_NAME, volume['file-name']).iter_chunks(chunk_size=100000000)
-        with open(output_file, 'wb') as gf:
-            while True:
-                try:
-                    gf.write(next(cos_file))
-                except StopIteration:
-                    break
-        print('Gunzipping {}'.format(output_file))
-        os.system('gunzip {}'.format(output_file))
+    if volume['compression'] == 'gzip':        
+        output_file = output_directory + volume['name']
+        print(f"Fetch {volume['name']} gzip volume from COS and uncompress to {output_file}")
+        cos_file = get_item(COS_BUCKET_NAME, volume['file-name'])
+        with gzip.GzipFile(fileobj=cos_file) as f_gzip:
+            with open(output_file, 'wb') as f_out:
+                shutil.copyfileobj(f_gzip, f_out)
+        print (f"Done fetching {volume['name']} to {output_file}")
 
         if not volume['boot']:
             return volume['name']
