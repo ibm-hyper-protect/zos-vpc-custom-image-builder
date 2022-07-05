@@ -3,12 +3,19 @@ import ibm_boto3
 from ibm_botocore.client import Config, ClientError
 from dotenv import load_dotenv
 import os
+import os.path
 import gzip
 from multiprocessing import Pool
 import re
 from pathlib import Path
+import requests
+import shlex
+import subprocess
 
 load_dotenv()
+
+METADATA_URL = "http://169.254.169.254"
+METADATA_VERSION = "2022-06-28"
 
 COS_ENDPOINT = os.environ.get('cosEndpoint')
 COS_API_KEY = os.environ.get('cosAPIKey')
@@ -17,8 +24,8 @@ COS_BUCKET_NAME = os.environ.get('cosBucketName')
 
 METADATA_FILE = 'image-metadata.json'
 DEVMAP_FILE = 'devmap'
-BOOT_VOLUME_DIRECTORY = '/boot-volumes/source/' # Trailing slashes
-DATA_VOLUME_DIRECTORY = '/data-volumes/'
+VOLUME_DIRECTORIES = '/volumes/'
+BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/source/' # Trailing slashes
 
 cos = ibm_boto3.resource('s3',
     ibm_api_key_id=COS_API_KEY,
@@ -113,7 +120,10 @@ def get_volume_file(volume):
     if volume['boot']:
         output_directory = BOOT_VOLUME_DIRECTORY
     else:
-        output_directory = DATA_VOLUME_DIRECTORY
+        name = volume['name'].lower()
+        if not "mount_path" in instance_volumes[name]:
+            format_and_mount(instance_volumes[name])
+        output_directory = instance_volumes[name]["mount_path"] + "/"
 
 
     if volume['compression'] == 'gzip':
@@ -133,9 +143,90 @@ def get_volume_file(volume):
     else:
         exit("Compression algorithm {} is not supported for file '{}'"
             .format(volume['compression'], volume['file-name']))
+
+# Metadata token            
+def get_token():
+    # Making a PUT request
+    response = requests.put(METADATA_URL + "/instance_identity/v1/token?version=" + METADATA_VERSION,
+                    headers = {
+                        "Metadata-Flavor": "ibm",
+                        "Accept": "application/json"
+                    },
+                    json = {
+                        "expires_in": 300
+                    })
+    if response.status_code > 399:
+        response.raise_for_status()
+    response_data = response.json()
+    return response_data["access_token"]
+
+# Metadata for instance
+def get_instance():
+    # Making a GET request
+    response = requests.get(METADATA_URL + "/metadata/v1/instance?version=" + METADATA_VERSION,
+                    headers = {
+                        "Metadata-Flavor": "ibm",
+                        "Accept": "application/json",
+                        "Authorization": "Bearer " + get_token()
+                    })
+    if response.status_code > 399:
+        response.raise_for_status()
+    response_data = response.json()
+    return response_data
+
+def get_instance_volume_dict(instance_metadata):
+    volumes = {}
+    for volume in instance_metadata["volume_attachments"][1:]:
+        # Skipping first volume which is the linux boot volume we do not need
+        volumes[ volume["name"] ] = volume
+    return volumes
+
+# Wait for volumes in metadata and get their paths
+def get_volumes_dev_paths(volumes):
+    all_found = False
+    while not all_found:
+        all_found = True
+        for (name, volume) in volumes.items():
+            if "dev_path" in volume:
+                next
+            dev_path = "/dev/disk/by-id/virtio-"+volume["device"]["id"][0:20]
+            found = os.path.exists(dev_path)
+            if found:
+                volume["dev_path"] = dev_path
+            all_found &= found 
+            print(f"Volume {name} with path {dev_path} - {'FOUND' if found else 'NOT FOUND'}")
+
+
+def format_and_mount(volume):
+    dev_path   = volume["dev_path"]
+    mount_path = "/volumes/" + volume["name"]
+    volume["mount_path"] = mount_path
+
+    print (f"Formating {dev_path} and mounting at {mount_path}")
+    subprocess.call(shlex.split(f"umount {mount_path}"))
+    subprocess.check_call(shlex.split(f"mkdir -p {mount_path}"))
+    subprocess.check_call(shlex.split(f"parted -s {dev_path} mklabel gpt mkpart primary ext4 0% 100%"))
+    subprocess.check_call(shlex.split(f"udevadm settle"))
+    subprocess.check_call(shlex.split(f"mkfs.ext4 {dev_path}-part1 -F"))
+    subprocess.check_call(shlex.split(f"mount {dev_path}-part1 {mount_path}"))
             
 
+
+
 if __name__ == '__main__':
+
+    # Retrive instance metadata
+    instance_data = get_instance()
+    instance_volumes = get_instance_volume_dict(instance_data)
+    #print(instance_volumes)
+
+    # Wait for the volumes and then format them
+    get_volumes_dev_paths(instance_volumes)
+
+    # Format boot volume
+    format_and_mount(instance_volumes["boot"])
+    subprocess.check_call(shlex.split(f"mkdir -p {BOOT_VOLUME_DIRECTORY}"))
+
     # Define 5 concurrent processes to get the volume files with
     p = Pool(10)
 

@@ -13,13 +13,17 @@ data "cloudinit_config" "config" {
 packages:
  - jq
  - unzip
+ - python3
+ - python3-pip
+ - libguestfs-tools
+ - parted
 write_files:
 - path: /tmp/data_mover.zip
   encoding: b64
   content: ${filebase64(data.archive_file.data_mover.output_path)}
 - path: /tmp/data_mover.env
   content: |
-    cosEndpoint='${data.ibm_cos_bucket.cos_bucket.s3_endpoint_direct}'
+    cosEndpoint='https://${data.ibm_cos_bucket.cos_bucket.s3_endpoint_direct}'
     cosAPIKey='${sensitive(var.ibmcloud_api_key)}'
     cosInstanceCRN='${data.ibm_cos_bucket.cos_bucket.crn}'
     cosBucketName='${var.cos_bucket_name}'
@@ -35,7 +39,8 @@ mkdir /data_mover
 cd /data_mover
 unzip /tmp/data_mover.zip
 cp /tmp/data_mover.env .env
-#./start.sh #TBD: execute when addapted to metadata
+pip3 install --no-cache-dir -r requirements.txt
+#./data_mover.sh #TBD: execute when adapted to metadata
 EOF
   }
 }
