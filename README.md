@@ -48,7 +48,17 @@ to clean up temp resources (e.g., VSI, boot volume, data volume).
 
 ## Using the custom image
 
-**TBD**:
-The steps will consist in checking out the VSI creation terraform sample and use a config file with the name of the image and data volume snapshots
-as parameter. Until this is ready the data volumes have to be created manually out of the snapshots before the VSI can be then created as described
-in the [VPC documentation](https://cloud.ibm.com/docs/vpc?topic=vpc-snapshots-vpc-restore).
+### Terraform
+
+**Comming**
+
+### UI
+
+1. Go to the [create VSI UI](https://cloud.ibm.com/vpc-ext/provision/vs)
+2. Select `IBM Z` as platform
+3. Give the VSI a name
+4. Select `Custom image as OS`. By default the custom image will be called `wazi-custom-image`
+5. Add a new data volume
+   1. Select `Import from Snapshot`
+   2. The snapshot is called `wazi-custom-image-data` by default
+6. Click on `Create VSI`
