@@ -21,6 +21,8 @@ load_dotenv()
 METADATA_URL = "http://169.254.169.254"
 METADATA_VERSION = "2022-06-28"
 
+ALL_VOLUMES_IN_DATA = True # If true, all boot volumes will be written to DATA
+
 COS_ENDPOINT = os.environ.get('cosEndpoint')
 COS_API_KEY = os.environ.get('cosAPIKey')
 COS_INSTANCE_CRN = os.environ.get('cosInstanceCRN')
@@ -126,6 +128,11 @@ def get_volume_file(volume):
     Get all the volume files from volumes list, 
     decompressing them, and writing to disk.
     '''
+
+    if ALL_VOLUMES_IN_DATA:
+        # ignore boot flag in volume and write to data
+        if volume['boot'] = False
+
     if volume['boot']:
         output_directory = BOOT_VOLUME_DIRECTORY
 
@@ -284,6 +291,10 @@ if __name__ == '__main__':
     # fast option removing zeroes - I do not use compress (-c) as it bottlenecks on a single CPU while IO is iddle
     subprocess.check_call(shlex.split(f"qemu-img convert -pO qcow2 {instance_volumes['boot']['dev_path']} {CUSTOM_IMAGE_PATH}"))
     print("Done convertig boot volume to qcow2 " + CUSTOM_IMAGE_PATH)
+
+    # Umount data volume and sync so we can take a consistent snapshot
+    subprocess.check_call(shlex.split(f"umount /volumes/data"))
+    subprocess.check_call(shlex.split(f"sync"))
 
 
     
