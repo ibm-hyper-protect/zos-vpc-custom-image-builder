@@ -18,15 +18,14 @@ data "ibm_cos_bucket" "cos_bucket" {
 data "ibm_cos_bucket_object" "image_metadata" {
   bucket_crn      = data.ibm_cos_bucket.cos_bucket.crn
   bucket_location = data.ibm_cos_bucket.cos_bucket.bucket_region
-  key             = "image-metadata2.json" #TBD: enforce json format
+  key             = "image-metadata.json"
 }
 
-# #Debug only
-# output "image_metadata_output" {
-#   value = jsondecode(data.ibm_cos_bucket_object.image_metadata.body)
-# }
-
-# #Debug only
-# output "image_metadata_type" {
-#   value = data.ibm_cos_bucket_object.image_metadata.content_type
-# }
+data "ibm_cos_bucket_object" "image_qcow2" {
+  bucket_crn      = data.ibm_cos_bucket.cos_bucket.crn
+  bucket_location = data.ibm_cos_bucket.cos_bucket.bucket_region
+  key             = "${var.custom_image_name}.qcow2"
+  depends_on = [
+    time_sleep.wait_for_cloudinit # Created by data_mover VSI
+  ]
+}

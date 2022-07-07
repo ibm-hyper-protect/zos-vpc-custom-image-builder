@@ -1,3 +1,4 @@
+#!/usr/bin/env -S python3 -u
 import json
 import ibm_boto3
 from ibm_botocore.client import Config, ClientError
@@ -13,6 +14,7 @@ import shlex
 import subprocess
 import gzip
 import shutil
+import uuid
 
 load_dotenv()
 
@@ -23,11 +25,14 @@ COS_ENDPOINT = os.environ.get('cosEndpoint')
 COS_API_KEY = os.environ.get('cosAPIKey')
 COS_INSTANCE_CRN = os.environ.get('cosInstanceCRN')
 COS_BUCKET_NAME = os.environ.get('cosBucketName')
+CUSTOM_IMAGE_NAME = os.environ.get('customImageName')
+CUSTOM_IMAGE_PATH = f"/volumes/qcow2/{CUSTOM_IMAGE_NAME}.qcow2"
 
 METADATA_FILE = 'image-metadata.json'
 DEVMAP_FILE = 'devmap'
 VOLUME_DIRECTORIES = '/volumes/'
-BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/source/' # Trailing slashes
+BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/' # Trailing slashes
+DATA_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'data/' # Trailing slashes
 
 cos = ibm_boto3.resource('s3',
     ibm_api_key_id=COS_API_KEY,
@@ -52,6 +57,7 @@ def pull_devmap():
     '''
     with open(BOOT_VOLUME_DIRECTORY + 'devmap', 'wb') as file:
         file.write(get_item(COS_BUCKET_NAME, DEVMAP_FILE).read())
+    os.chown(BOOT_VOLUME_DIRECTORY + 'devmap', 999, 999)
 
 
 def get_item(bucket_name, item_name):
@@ -99,7 +105,7 @@ def parse_metadata_file(file):
         exit('Unable to open metadata file')
 
 
-def remove_data_volume_from_devmap(volumes):
+def fix_path_data_volume_in_devmap(data_vol_part_uuid, volumes):
     '''
     Takes a list of (data) volume names, finds the device in the devmap, 
     and removes that mountpoint name. Cleans up after itself by removing 
@@ -108,8 +114,9 @@ def remove_data_volume_from_devmap(volumes):
     with open(BOOT_VOLUME_DIRECTORY + 'devmap', 'r') as devmap, open(BOOT_VOLUME_DIRECTORY + 'devmap_tmp', 'w') as devmap_tmp:
         for line in devmap:
             for volume in volumes:
-                line = re.sub(r'/volumes/' + volume, '', line)
+                line = re.sub(r'/volumes/' + volume, f'/volume_{data_vol_part_uuid}/{volume}', line)
             devmap_tmp.write(line)
+    os.chown(BOOT_VOLUME_DIRECTORY + 'devmap_tmp', 999, 999)
     os.remove(BOOT_VOLUME_DIRECTORY + 'devmap')
     os.rename(BOOT_VOLUME_DIRECTORY + 'devmap_tmp', BOOT_VOLUME_DIRECTORY + 'devmap')
 
@@ -121,11 +128,16 @@ def get_volume_file(volume):
     '''
     if volume['boot']:
         output_directory = BOOT_VOLUME_DIRECTORY
+
+        # Create the dotfiles
+        Path(output_directory + '.zosprepared').touch(exist_ok=True)
+        os.chown(output_directory + '.zosprepared', 999, 999)
     else:
-        name = volume['name'].lower()
-        if not "mount_path" in instance_volumes[name]:
-            format_and_mount(instance_volumes[name])
-        output_directory = instance_volumes[name]["mount_path"] + "/"
+        output_directory = DATA_VOLUME_DIRECTORY
+
+        # Create the dotfiles
+        Path(output_directory + '.zcsc').touch(exist_ok=True)
+        os.chown(output_directory + '.zcsc', 999, 999)
 
 
     if volume['compression'] == 'gzip':        
@@ -133,9 +145,10 @@ def get_volume_file(volume):
         print(f"Fetch {volume['name']} gzip volume from COS and uncompress to {output_file}")
         cos_file = get_item(COS_BUCKET_NAME, volume['file-name'])
         with gzip.GzipFile(fileobj=cos_file) as f_gzip:
-            with open(output_file, 'wb') as f_out:
-                shutil.copyfileobj(f_gzip, f_out)
+           with open(output_file, 'wb') as f_out:
+               shutil.copyfileobj(f_gzip, f_out)
         print (f"Done fetching {volume['name']} to {output_file}")
+        os.chown(output_file, 999, 999)
 
         if not volume['boot']:
             return volume['name']
@@ -200,16 +213,17 @@ def format_and_mount(volume):
     dev_path   = volume["dev_path"]
     mount_path = "/volumes/" + volume["name"]
     volume["mount_path"] = mount_path
+    filesystem_uuid = uuid.uuid4()
 
-    print (f"Formating {dev_path} and mounting at {mount_path}")
+    print (f"Formating {dev_path} with UUID {filesystem_uuid} and mounting at {mount_path}")
     subprocess.call(shlex.split(f"umount {mount_path}"))
     subprocess.check_call(shlex.split(f"mkdir -p {mount_path}"))
-    subprocess.check_call(shlex.split(f"parted -s {dev_path} mklabel gpt mkpart primary ext4 0% 100%"))
-    subprocess.check_call(shlex.split(f"udevadm settle"))
-    subprocess.check_call(shlex.split(f"mkfs.ext4 {dev_path}-part1 -F"))
-    subprocess.check_call(shlex.split(f"mount {dev_path}-part1 {mount_path}"))
+    #subprocess.check_call(shlex.split(f"parted -s {dev_path} mklabel gpt mkpart primary ext4 0% 100%"))
+    #subprocess.check_call(shlex.split(f"udevadm settle"))
+    subprocess.check_call(shlex.split(f"mkfs.ext2 {dev_path} -F -U {filesystem_uuid}"))
+    subprocess.check_call(shlex.split(f"mount {dev_path} {mount_path}"))
             
-
+    return filesystem_uuid
 
 
 if __name__ == '__main__':
@@ -224,7 +238,10 @@ if __name__ == '__main__':
 
     # Format boot volume
     format_and_mount(instance_volumes["boot"])
-    subprocess.check_call(shlex.split(f"mkdir -p {BOOT_VOLUME_DIRECTORY}"))
+    subprocess.check_call(shlex.split(f"e2label {instance_volumes['boot']['dev_path']} zvolumes")) #TBD: is the label required?
+
+    # Format data volume
+    data_vol_part_uuid = format_and_mount(instance_volumes["data"])
 
     # Define 5 concurrent processes to get the volume files with
     p = Pool(10)
@@ -243,23 +260,30 @@ if __name__ == '__main__':
     # data_volumes list will include None values where the get_volume_file 
     # function returned None, when it was a boot volume. 
     # Use the list comprehension here to remove those None values.
-    remove_data_volume_from_devmap([i for i in data_volumes if i])
+    fix_path_data_volume_in_devmap(data_vol_part_uuid, [i for i in data_volumes if i])
 
     # Rename the data volume files and set their uid/gid
-    i = 0
-    for file in os.listdir(DATA_VOLUME_DIRECTORY):
-        if not file.startswith('.'):
-            try:
-                os.chown(DATA_VOLUME_DIRECTORY + file, 999, 999)
-            except PermissionError:
-                exit("Unable to set data volume file '{}' to uid/gid 999:999".format(file))
-            os.rename(DATA_VOLUME_DIRECTORY + file, DATA_VOLUME_DIRECTORY + 'ZVOL{:0>4}'.format(i))
-            i = i + 1
+    # TBD - needs rework
+    # i = 0
+    # for file in os.listdir(DATA_VOLUME_DIRECTORY):
+    #     if not file.startswith('.'):
+    #         try:
+    #             os.chown(DATA_VOLUME_DIRECTORY + file, 999, 999)
+    #         except PermissionError:
+    #             exit("Unable to set data volume file '{}' to uid/gid 999:999".format(file))
+    #         os.rename(DATA_VOLUME_DIRECTORY + file, DATA_VOLUME_DIRECTORY + 'ZVOL{:0>4}'.format(i))
+    #         i = i + 1
 
-    # Create the dotfiles
-    Path(BOOT_VOLUME_DIRECTORY + '.zosprepared').touch(exist_ok=True)
-    os.chown(BOOT_VOLUME_DIRECTORY + '.zosprepared', 999, 999)
-    Path(DATA_VOLUME_DIRECTORY + '.zcsc').touch(exist_ok=True)
-    os.chown(DATA_VOLUME_DIRECTORY + '.zcsc', 999, 999)
+    
+    # Create qcow2 from boot disk
+    subprocess.check_call(shlex.split(f"umount /volumes/boot"))
+    format_and_mount(instance_volumes["qcow2"])
+    print("Convertig boot volume to qcow2 " + CUSTOM_IMAGE_PATH)
+    # slow option compressing and sparsifying file
+    #subprocess.check_call(shlex.split(f"virt-sparsify --compress --convert qcow2 --tmp /volumes/qcow2/ --check-tmpdir=continue {instance_volumes['boot']['dev_path']} {CUSTOM_IMAGE_PATH}"))
+    # fast option removing zeroes - I do not use compress (-c) as it bottlenecks on a single CPU while IO is iddle
+    subprocess.check_call(shlex.split(f"qemu-img convert -pO qcow2 {instance_volumes['boot']['dev_path']} {CUSTOM_IMAGE_PATH}"))
+    print("Done convertig boot volume to qcow2 " + CUSTOM_IMAGE_PATH)
+
 
     

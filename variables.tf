@@ -1,17 +1,40 @@
-# Region to run the VSI doing the conversion
+variable "custom_image_name" {
+  description = "z/OS Custom image name" 
+  type        = string
+  default = "wazi-custom-image"
+}
 variable "region" {
+  description = "Region to run the VSI doing the conversion" 
+  type        = string
   default = "ca-tor"
 }
 
-# Zone for the VSI - data volumes will be stored here
 variable "zone" {
+  description = "Zone for the VSI - data volumes will be stored here" 
+  type        = string
   default = "1"
 }
 
-# z/OS Custom image name
-variable "custom_image_name" {
-  default = "wazi-custom-image"
+variable "cos_bucket_region" {
+  description = "Region of the COS instance" 
+  type        = string
 }
+
+variable "cos_instance_name" {
+  description = "Name of the COS instance" 
+  type        = string
+}
+
+variable "cos_bucket_name" {
+  description = "Name of the COS bucket" 
+  type        = string
+}
+
+
+
+
+
+# The options bellow should not need to be changed
 
 # z/OS Volume name prefix
 variable "volume_prefix" {
@@ -29,20 +52,8 @@ variable "mover_vsi_name" {
   default = "wazi-custom-image-build"
 }
 
-variable "cos_instance_name" {
-  default = "Cloud Object Storage-6q"
-}
-
-variable "cos_bucket_name" {
-  default = "wibtest-eu-gb"
-}
-
 variable "cos_bucket_type" {
   default = "region_location"
-}
-
-variable "cos_bucket_region" {
-  default = "eu-gb"
 }
 
 
@@ -74,6 +85,10 @@ variable "total_ipv4_address_count" {
 variable "mover_image_name" {
   # Regular expresions allowed
   default = ".*ubuntu.*"
+}
+
+variable "custom_image_os" {
+  default = "zos-2-4-s390x"
 }
 
 variable "mover_profile" {

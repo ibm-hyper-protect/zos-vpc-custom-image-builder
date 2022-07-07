@@ -68,10 +68,11 @@ resource "ibm_is_instance" "vsi" {
 #Volumes
 resource "ibm_is_instance_volume_attachment" "zos_volumes" {
   instance = ibm_is_instance.vsi.id
-  for_each = merge(
-     {boot = "250"}, #TBD: calculate size
-     {for volume in local.image_metadata_local_volumes: lower(volume.name) => volume.size}
-  )
+  for_each = {
+    boot  = (local.image_metadata_body.image["boot-size"]/1000000000)*1.10, //Adding extra space for file system overhead
+    qcow2 = (local.image_metadata_body.image["boot-size"]/1000000000)*1.15, //Adding extra space for file system overhead + qcow2
+    data  = (local.image_metadata_body.image["data-size"]/1000000000)*1.10, //Adding extra space for file system overhead
+  }
 
   name                               = each.key
   profile                            = var.volume_purpose

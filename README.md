@@ -22,12 +22,12 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 2. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars-template) with the name of the COS bucket
    - **NOTE:** there is currently a bug in the Image builder not uploading the `image-metadata.json` as json. As circumvention
      you can use the COS UI to download it and upload it again. This will correct the format.
-3. `terraform apply` - this will create the VSI with the required data volumes
-4. Follow the [data_mover](data_mover/README.md) instructions to download the ECKD disks from COS to VPC volumes
-   - **TBD**: this script will be executed from Terraform in following versions
-5. Create the z/OS image from the `wazi-custom-image-boot` volume and snapshots out of the remaining `wazi-custom-image-*` data volumes
+3. `terraform apply` - this will create the VSI with the required data volumes. You might want to use the VSI serial console: the progress logs are written there by cloud init.
+   - bootable qcow2 is uploaded to the COS bucket
+   - data volume is created
+5. Create the z/OS image from the `wazi-custom-image` qcow2 in COS and snapshots out of the remaining `wazi-custom-image-data` data volume
   - **TBD**: this will be done by `terraform apply` in following versions
-6. `terraform destroy`
+6. `terraform destroy` to clean up temp resources (VSI, boot volume, data volume)
 
 
 ## Using the custom image

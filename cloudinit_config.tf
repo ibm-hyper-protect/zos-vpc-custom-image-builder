@@ -27,6 +27,7 @@ write_files:
     cosAPIKey='${sensitive(var.ibmcloud_api_key)}'
     cosInstanceCRN='${data.ibm_cos_bucket.cos_bucket.crn}'
     cosBucketName='${var.cos_bucket_name}'
+    customImageName='${var.custom_image_name}'
 EOF
   }
 
@@ -39,8 +40,10 @@ mkdir /data_mover
 cd /data_mover
 unzip /tmp/data_mover.zip
 cp /tmp/data_mover.env .env
+export PYTHONUNBUFFERED=1
 pip3 install --no-cache-dir -r requirements.txt
-#./data_mover.sh #TBD: execute when adapted to metadata
+./data_mover.py
+./upload.py
 EOF
   }
 }

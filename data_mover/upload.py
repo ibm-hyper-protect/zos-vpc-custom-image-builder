@@ -1,3 +1,4 @@
+#!/usr/bin/env -S python3 -u
 import argparse
 from pathlib import Path
 from data_mover import *
@@ -35,7 +36,7 @@ def upload_image(bucket_name, file_path):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--image', '-i', help='File path of image to upload', required=True)
+    parser.add_argument('--image', '-i', help='File path of image to upload', default=CUSTOM_IMAGE_PATH)
     args = parser.parse_args()
 
     upload_image(COS_BUCKET_NAME, args.image)
