@@ -6,6 +6,6 @@ resource "ibm_is_image" "custom_image" {
   #encryption_key     = "crn:v1:bluemix:public:kms:us-south:a/6xxxxxxxxxxxxxxx:xxxxxxx-xxxx-xxxx-xxxxxxx:key:dxxxxxx-fxxx-4xxx-9xxx-7xxxxxxxx"//increase timeouts as per volume size
 
   timeouts {
-    create = "90m"
+    create = "300m"
   }
 }
