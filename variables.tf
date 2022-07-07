@@ -84,7 +84,7 @@ variable "total_ipv4_address_count" {
 
 variable "mover_image_name" {
   # Regular expresions allowed
-  default = ".*ubuntu.*"
+  default = ".*ubuntu.*amd64.*"
 }
 
 variable "custom_image_os" {
