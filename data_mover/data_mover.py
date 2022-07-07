@@ -57,9 +57,10 @@ def pull_devmap():
     '''
     Pulls the devmap file from a COS bucket, and saves it to disk.
     '''
-    with open(BOOT_VOLUME_DIRECTORY + 'devmap', 'wb') as file:
+    volume = DATA_VOLUME_DIRECTORY if ALL_VOLUMES_IN_DATA else BOOT_VOLUME_DIRECTORY
+    with open(volume + 'devmap', 'wb') as file:
         file.write(get_item(COS_BUCKET_NAME, DEVMAP_FILE).read())
-    os.chown(BOOT_VOLUME_DIRECTORY + 'devmap', 999, 999)
+    os.chown(volume + 'devmap', 999, 999)
 
 
 def get_item(bucket_name, item_name):
@@ -209,7 +210,7 @@ def get_volumes_dev_paths(volumes):
         all_found = True
         for (name, volume) in volumes.items():
             if "dev_path" in volume:
-                next
+                continue
             dev_path = "/dev/disk/by-id/virtio-"+volume["device"]["id"][0:20]
             found = os.path.exists(dev_path)
             if found:
