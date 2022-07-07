@@ -36,7 +36,7 @@ Once compeleted successfully, the following can be observed as output:
 - A bootable qcow2 image is uploaded to the IBM Cloud Object Storage bucket
 - A VPC block storage device, storing data volumes from the z/OS image, is created
 
-Create the z/OS image from the `wazi-custom-image` qcow2 file in your IBM Cloud Object Storage bucket, and snapshots out of the remaining `wazi-custom-image-data` data volume. **TBD**: this will be done by `terraform apply` in following versions
+Create the z/OS image from the `wazi-custom-image` qcow2 file in your IBM Cloud Object Storage bucket, and snapshots out of the remaining `wazi-custom-image-data` data volume. **TBD**: this will be done by `terraform apply` in following versions.
 
 Use
 
@@ -51,4 +51,4 @@ to clean up temp resources (e.g., VSI, boot volume, data volume).
 **TBD**:
 The steps will consist in checking out the VSI creation terraform sample and use a config file with the name of the image and data volume snapshots
 as parameter. Until this is ready the data volumes have to be created manually out of the snapshots before the VSI can be then created as described
-in the [VPC documentation](https://cloud.ibm.com/docs/vpc?topic=vpc-snapshots-vpc-restore)
+in the [VPC documentation](https://cloud.ibm.com/docs/vpc?topic=vpc-snapshots-vpc-restore).
