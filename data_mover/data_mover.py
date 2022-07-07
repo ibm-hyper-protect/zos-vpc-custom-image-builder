@@ -131,7 +131,7 @@ def get_volume_file(volume):
 
     if ALL_VOLUMES_IN_DATA:
         # ignore boot flag in volume and write to data
-        if volume['boot'] = False
+        volume['boot'] = False
 
     if volume['boot']:
         output_directory = BOOT_VOLUME_DIRECTORY
@@ -143,8 +143,10 @@ def get_volume_file(volume):
         output_directory = DATA_VOLUME_DIRECTORY
 
         # Create the dotfiles
-        Path(output_directory + '.zcsc').touch(exist_ok=True)
-        os.chown(output_directory + '.zcsc', 999, 999)
+        Path(output_directory + '.zosprepared').touch(exist_ok=True)
+        os.chown(output_directory + '.zosprepared', 999, 999)
+        #Path(output_directory + '.zcsc').touch(exist_ok=True)
+        #os.chown(output_directory + '.zcsc', 999, 999)
 
 
     if volume['compression'] == 'gzip':        
@@ -245,10 +247,10 @@ if __name__ == '__main__':
 
     # Format boot volume
     format_and_mount(instance_volumes["boot"])
-    subprocess.check_call(shlex.split(f"e2label {instance_volumes['boot']['dev_path']} zvolumes")) #TBD: is the label required?
 
     # Format data volume
     data_vol_part_uuid = format_and_mount(instance_volumes["data"])
+    subprocess.check_call(shlex.split(f"e2label {instance_volumes['data']['dev_path']} zvolumes")) # Create data as boot volume
 
     # Define 5 concurrent processes to get the volume files with
     p = Pool(10)
@@ -267,7 +269,7 @@ if __name__ == '__main__':
     # data_volumes list will include None values where the get_volume_file 
     # function returned None, when it was a boot volume. 
     # Use the list comprehension here to remove those None values.
-    fix_path_data_volume_in_devmap(data_vol_part_uuid, [i for i in data_volumes if i])
+    #fix_path_data_volume_in_devmap(data_vol_part_uuid, [i for i in data_volumes if i])
 
     # Rename the data volume files and set their uid/gid
     # TBD - needs rework
