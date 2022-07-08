@@ -1,11 +1,13 @@
 # Create a VPC
 resource "ibm_is_vpc" "vpc" {
-  name = var.vpc
+  name = local.mover_vsi_name
+
 }
 
 # subnetwork
 resource "ibm_is_subnet" "subnet" {
-  name                     = var.subnetwork_name
+  name                     = local.mover_vsi_name
+
   vpc                      = ibm_is_vpc.vpc.id
   zone                     = local.full_zone
   total_ipv4_address_count = var.total_ipv4_address_count
@@ -13,13 +15,15 @@ resource "ibm_is_subnet" "subnet" {
 
 # ssh key
 resource "ibm_is_ssh_key" "sshkey" {
-  name      = var.ssh_public_key_name
+  name      = local.mover_vsi_name
+
   public_key = local.ssh_public_key
 }
 
 # security group
 resource "ibm_is_security_group" "security_group" {
-    name = var.mover_vsi_name
+    name = local.mover_vsi_name
+
     vpc = ibm_is_vpc.vpc.id
 }
 
@@ -48,7 +52,8 @@ locals {
 
 # vsi
 resource "ibm_is_instance" "vsi" {
-  name    = var.mover_vsi_name
+  name    = local.mover_vsi_name
+
   image   = local.mover_image.id
   profile = var.mover_profile
   metadata_service_enabled  = true
@@ -79,13 +84,15 @@ resource "ibm_is_instance_volume_attachment" "zos_volumes" {
   capacity                           = each.value
   delete_volume_on_attachment_delete = true
   delete_volume_on_instance_delete   = false
-  volume_name                        = "${var.volume_prefix}-${each.key}"
+  volume_name                        = "${local.mover_vsi_name
+}-${each.key}"
 }
 
 
 # Floating IP
 resource "ibm_is_floating_ip" "floatingip" {
-  name   = var.mover_vsi_name
+  name   = local.mover_vsi_name
+
   target = ibm_is_instance.vsi.primary_network_interface[0].id
 }
 
