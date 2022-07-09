@@ -76,9 +76,9 @@ def get_item(bucket_name, item_name):
         else:
             exit('File {0} not found in bucket'.format(item_name))
     except ClientError as ce:
-        print('CLIENT ERROR: {0}\n'.format(ce))
+        exit('CLIENT ERROR: {0}\n'.format(ce))
     except Exception as e:
-        print('Unable to retrieve file contents: {0}'.format(e))
+        exit('Unable to retrieve file contents: {0}'.format(e))
 
 
 def get_bucket_contents(bucket_name):
@@ -271,8 +271,9 @@ if __name__ == '__main__':
     pull_devmap()
 
     # Download the volume files in parallel, and return a list of the data volumes
+    print(f"Downloading ECK files {volumes}")
     data_volumes = p.map(get_volume_file, volumes)
-    print("Done downloading CDK files")
+    print("DONE downloading CDK files")
 
     # data_volumes list will include None values where the get_volume_file 
     # function returned None, when it was a boot volume. 
