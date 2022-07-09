@@ -204,19 +204,30 @@ def get_instance_volume_dict(instance_metadata):
     return volumes
 
 # Wait for volumes in metadata and get their paths
-def get_volumes_dev_paths(volumes):
+def get_volumes_dev_paths():
     all_found = False
+    instance_volumes = {}
     while not all_found:
         all_found = True
-        for (name, volume) in volumes.items():
+        # Retrive instance metadata
+        instance_data = get_instance()
+        instance_volumes = get_instance_volume_dict(instance_data)
+        print(instance_volumes)
+
+        for (name, volume) in instance_volumes.items():
             if "dev_path" in volume:
                 continue
-            dev_path = "/dev/disk/by-id/virtio-"+volume["device"]["id"][0:20]
-            found = os.path.exists(dev_path)
+            found = False
+            try:
+                dev_path = "/dev/disk/by-id/virtio-"+volume["device"]["id"][0:20]
+                found = os.path.exists(dev_path)
+            except e:
+                pass
             if found:
                 volume["dev_path"] = dev_path
             all_found &= found 
             print(f"Volume {name} with path {dev_path} - {'FOUND' if found else 'NOT FOUND'}")
+    return instance_volumes
 
 
 def format_and_mount(volume):
@@ -238,13 +249,8 @@ def format_and_mount(volume):
 
 if __name__ == '__main__':
 
-    # Retrive instance metadata
-    instance_data = get_instance()
-    instance_volumes = get_instance_volume_dict(instance_data)
-    #print(instance_volumes)
-
     # Wait for the volumes and then format them
-    get_volumes_dev_paths(instance_volumes)
+    instance_volumes = get_volumes_dev_paths()
 
     # Format boot volume
     format_and_mount(instance_volumes["boot"])
@@ -266,6 +272,7 @@ if __name__ == '__main__':
 
     # Download the volume files in parallel, and return a list of the data volumes
     data_volumes = p.map(get_volume_file, volumes)
+    print("Done downloading CDK files")
 
     # data_volumes list will include None values where the get_volume_file 
     # function returned None, when it was a boot volume. 
