@@ -5,6 +5,8 @@ cos_bucket_name = "wazi-custom-image-bucket"
 cos_bucket_region = "ca-tor"
 
 custom_image_name = "wazi-custom-image"
+custom_image_os = "zos-2-4-s390x"
+
 region = "ca-tor"
 zone = "1"
 

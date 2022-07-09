@@ -62,3 +62,9 @@ to clean up temp resources (e.g., VSI, boot volume, data volume).
    1. Select `Import from Snapshot`
    2. The snapshot is called `wazi-custom-image-data` by default
 6. Click on `Create VSI`
+
+
+## Debugging data mover VSI
+
+- you can ssh into the daza mover VSI with `ssh -i private_key root@<floating IP of the VSI>`
+- you can copy the cloud-init log output with `ssh -i private_key root@<floating IP of the VSI> cat /var/log/cloud-init-output.log`

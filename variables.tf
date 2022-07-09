@@ -1,8 +1,16 @@
+# Image variables
 variable "custom_image_name" {
   description = "z/OS Custom image name" 
   type        = string
   default = "wazi-custom-image"
 }
+
+variable "custom_image_os" {
+  description = "OS for generated image - it must match the OS uploaded to COS"
+  default = "zos-2-4-s390x"
+}
+
+# Target location for image
 variable "region" {
   description = "Region to run the VSI doing the conversion" 
   type        = string
@@ -15,6 +23,7 @@ variable "zone" {
   default = "1"
 }
 
+# Souce COS bucket with the CKD files
 variable "cos_bucket_region" {
   description = "Region of the COS instance" 
   type        = string
@@ -44,6 +53,7 @@ variable "volume_purpose" {
 }
 
 variable "cos_bucket_type" {
+  description = "bucket type"
   default = "region_location"
 }
 
@@ -51,25 +61,23 @@ variable "cos_bucket_type" {
 # Most likelly you do not need to change the values bellow
 
 variable "ssh_private_key" {
-  default = "~/no.ssh/id_rsa" # If this file does not exist, a terraform generated key is used
-}
-variable "ssh_public_key" {
-  default = "~/no.ssh/id_rsa.pub" # If this file does not exist, a terraform generated key is used
+  description = "path to private ssh for data mover VSI - if not set terraform will generate a random one" 
+  type        = string
+  default     = null
 }
 
 variable "total_ipv4_address_count" {
+    description = "total IPs for subnetwork"
     default = 256
 }
 
 variable "mover_image_name" {
   # Regular expresions allowed
+  description = "image used for the VSI data mover"
   default = ".*ubuntu.*22-04.*amd64.*"
 }
 
-variable "custom_image_os" {
-  default = "zos-2-4-s390x"
-}
-
 variable "mover_profile" {
+  description = "image used for the VSI data mover"
   default = "bx2d-16x64"
 }
