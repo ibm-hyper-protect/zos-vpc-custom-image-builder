@@ -34,7 +34,7 @@ EOF
   part {
     content_type = "text/x-shellscript"
     content      = <<EOF
-#!/bin/sh
+#!/bin/sh -e
 rm -rf /data_mover
 mkdir /data_mover
 cd /data_mover
