@@ -221,7 +221,7 @@ def get_volumes_dev_paths():
             try:
                 dev_path = "/dev/disk/by-id/virtio-"+volume["device"]["id"][0:20]
                 found = os.path.exists(dev_path)
-            except e:
+            except:
                 pass
             if found:
                 volume["dev_path"] = dev_path
