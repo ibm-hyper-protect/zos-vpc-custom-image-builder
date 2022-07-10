@@ -1,4 +1,4 @@
-resource "ibm_is_snapshot" "custom_image_data_volume" {
+resource "ibm_is_snapshot" "custom_image_data" {
   name          = "${var.custom_image_name}-data"
   source_volume = ibm_is_volume.zos_volumes["data"].id
 

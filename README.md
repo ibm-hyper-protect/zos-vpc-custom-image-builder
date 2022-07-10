@@ -5,6 +5,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 ## Preparations
 
 1. [Install Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+   - **NOTE:** you need at least version 1.2
 2. Duplicate the Terraform variables template file: `cp my-settings.auto.tfvars-template my-settings.auto.tfvars`
 3. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars-template)
    - set `ibmcloud_api_key=<your API key>`
@@ -17,7 +18,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 4. Clone this repo to your local machine
 5. Run `terraform init` from within this repo's directory
 
-## Running
+## Running the data mover
 
 1. Use Wazi Image Builder to upload your z/OS image to IBM Cloud Object Store (COS)
 2. Adjust [my-settings.auto.tfvars](my-settings.auto.tfvars-template) with the name of the COS bucket
@@ -29,7 +30,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
    terraform apply
    ```
 
-  This will create the VSI with the required data volumes. You might want to use the VSI serial console: the progress logs are written there by cloud init.
+   This will create the VSI with the required data volumes. You might want to use the VSI serial console: the progress logs are written there by cloud init.
 
 Once compeleted successfully, the following can be observed as output:
 
@@ -38,13 +39,30 @@ Once compeleted successfully, the following can be observed as output:
 
 Create the z/OS image from the `wazi-custom-image` qcow2 file in your IBM Cloud Object Storage bucket, and snapshots out of the remaining `wazi-custom-image-data` data volume. **TBD**: this will be done by `terraform apply` in following versions.
 
-Use
+## Clean up the data mover
 
-```bash
-terraform destroy
-```
+It is important to destroy the data mover after it has completed so you do not get unneeded charges for the data mover VSI and its volumes:
 
-to clean up temp resources (e.g., VSI, boot volume, data volume).
+1. If you want to keep the current custom image and its corresponding data volume snapshot you need to remove them from
+   Terraform control **before** destroying the Terraform env. You can do this with the following commands:
+
+   ```bash
+   terraform state rm ibm_is_image.custom_image
+   terraform state rm ibm_is_snapshot.custom_image_data
+   ```
+
+   Please notice that if you run `terraform apply` afterwards with the same `custom_image_name` you will get a conflict. This can be solved by:
+   - using a different `custom_image_name`
+   - renaming the custom image and data volume snapshot with the UI/CLI
+   - deleting the custom image and data volume snapshot with the UI/CLI
+   - ```bash
+     terraform import ibm_is_image.custom_image
+     terraform import ibm_is_snapshot.custom_image_data
+     ```
+2. Destroy the remaining resources (e.g., VSI, boot volume, data volume) used by the data mover:
+   ```bash
+   terraform destroy
+   ```
 
 ## Using the custom image
 
