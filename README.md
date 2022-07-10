@@ -67,4 +67,6 @@ to clean up temp resources (e.g., VSI, boot volume, data volume).
 ## Debugging data mover VSI
 
 - you can ssh into the daza mover VSI with `ssh -i private_key root@<floating IP of the VSI>`
+  - to build the qcow2 and data volume manualy: `cd /data-mover;./data-mover.py`
+  - to upload the qcow2 to COS manualy: `cd /data-mover;./upload.py`
 - you can copy the cloud-init log output with `ssh -i private_key root@<floating IP of the VSI> cat /var/log/cloud-init-output.log`
