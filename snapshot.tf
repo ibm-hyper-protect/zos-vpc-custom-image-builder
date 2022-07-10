@@ -1,6 +1,6 @@
 resource "ibm_is_snapshot" "custom_image_data_volume" {
   name          = "${var.custom_image_name}-data"
-  source_volume = ibm_is_instance_volume_attachment.zos_volumes["data"].volume
+  source_volume = ibm_is_volume.zos_volumes["data"].id
 
   depends_on = [
     time_sleep.wait_for_cloudinit # Created by data_mover VSI

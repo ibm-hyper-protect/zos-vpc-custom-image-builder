@@ -54,6 +54,10 @@ locals {
 resource "ibm_is_instance" "vsi" {
   name    = local.mover_vsi_name
 
+  depends_on = [
+    ibm_is_volume.zos_volumes # Wait until volumes exists to avoid race conditions
+  ]
+
   image   = local.mover_image.id
   profile = var.mover_profile
   metadata_service_enabled  = true
@@ -71,21 +75,24 @@ resource "ibm_is_instance" "vsi" {
 }
 
 #Volumes
-resource "ibm_is_instance_volume_attachment" "zos_volumes" {
-  instance = ibm_is_instance.vsi.id
+resource "ibm_is_volume" "zos_volumes" {
   for_each = {
     boot  = 10, # (local.image_metadata_body.image["boot-size"]/1000000000)*1.10, //Adding extra space for file system overhead
     qcow2 = 15, # (local.image_metadata_body.image["boot-size"]/1000000000)*1.15, //Adding extra space for file system overhead + qcow2
     data  = ceil((local.image_metadata_body.image["size"]/1000000000)*1.10), //Adding extra space for file system overhead
   }
 
-  name                               = each.key
-  profile                            = var.volume_purpose
-  capacity                           = each.value
-  delete_volume_on_attachment_delete = true
-  delete_volume_on_instance_delete   = false
-  volume_name                        = "${local.mover_vsi_name
-}-${each.key}"
+  profile  = var.volume_purpose
+  zone     = local.full_zone
+  capacity = each.value
+  name     = "${local.mover_vsi_name}-${each.key}"
+}
+resource "ibm_is_instance_volume_attachment" "zos_volume_attachment" {
+  instance = ibm_is_instance.vsi.id
+  for_each = ibm_is_volume.zos_volumes
+
+  name     = each.key
+  volume   = each.value.id
 }
 
 
@@ -106,6 +113,7 @@ resource "time_sleep" "wait_for_cloudinit" {
 
   triggers = {
     vsi_id = ibm_is_instance.vsi.id
+    disks = join(",", [for volume_attach in ibm_is_instance_volume_attachment.zos_volume_attachment: volume_attach.id])
   }
 
   # Establishes connection to be used by all
