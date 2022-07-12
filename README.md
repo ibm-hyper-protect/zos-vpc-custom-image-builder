@@ -55,10 +55,12 @@ It is important to destroy the data mover after it has completed so you do not g
    - using a different `custom_image_name`
    - renaming the custom image and data volume snapshot with the UI/CLI
    - deleting the custom image and data volume snapshot with the UI/CLI
-   - ```bash
-     terraform import ibm_is_image.custom_image
-     terraform import ibm_is_snapshot.custom_image_data
+   - import the existing resources:
+     ```bash
+     terraform import ibm_is_image.custom_image <custom image UID>
+     terraform import ibm_is_snapshot.custom_image_data <snapshot UID>
      ```
+     You can get the UIDs from the UI or CLI. The typically start with 
 2. Destroy the remaining resources (e.g., VSI, boot volume, data volume) used by the data mover:
    ```bash
    terraform destroy
