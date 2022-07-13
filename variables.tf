@@ -7,7 +7,7 @@ variable "custom_image_name" {
 
 variable "custom_image_os" {
   description = "OS for generated image - it must match the OS uploaded to COS"
-  default = "zos-2-4-s390x"
+  default = "zos-2-4-s390x-dev-test-byol"
 }
 
 # Target location for image
