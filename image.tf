@@ -22,7 +22,9 @@ resource "ibm_is_image" "custom_image" {
   timeouts {
     create = "300m"
   }
-  lifecycle {
-    replace_triggered_by = [null_resource.value_of_qcow2.id]
-  }
+  # Commenting it for now since it needs terraform 1.2.x, and schematics won't
+  # support that until end of Q3.
+  #lifecycle {
+  #  replace_triggered_by = [null_resource.value_of_qcow2.id]
+  #}
 }
