@@ -73,8 +73,10 @@ variable "total_ipv4_address_count" {
 
 variable "mover_image_name" {
   # Regular expresions allowed
+  # Only Terraform 1.2 can connect to Ubuntu 22.
+  # Ubuntu 20.04 is more widely supported
   description = "image used for the VSI data mover"
-  default = ".*ubuntu.*22-04.*amd64.*"
+  default = ".*ubuntu.*20-04.*amd64.*"
 }
 
 variable "mover_profile" {
