@@ -86,7 +86,11 @@ resource "ibm_is_volume" "zos_volumes" {
   zone     = local.full_zone
   capacity = each.value
   name     = "${local.mover_vsi_name}-${each.key}"
+
+  # Key used to encrypt the boot and data columes
+  encryption_key = local.volume_encryption_key_crn
 }
+
 resource "ibm_is_instance_volume_attachment" "zos_volume_attachment" {
   instance = ibm_is_instance.vsi.id
   for_each = ibm_is_volume.zos_volumes
@@ -94,7 +98,6 @@ resource "ibm_is_instance_volume_attachment" "zos_volume_attachment" {
   name     = each.key
   volume   = each.value.id
 }
-
 
 # Floating IP
 resource "ibm_is_floating_ip" "floatingip" {
