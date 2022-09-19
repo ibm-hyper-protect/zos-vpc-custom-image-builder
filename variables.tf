@@ -39,9 +39,36 @@ variable "cos_bucket_name" {
   type        = string
 }
 
+variable "encryption_type" {
+  type        = string
+  default     = "provider_managed"
+  description = <<-DESC
+                 If the value is "provider_managed", then the block storage
+                 volumes will be encrypted automatically with the key chosen
+                 by IBM. However, if the user wishes to use own keys, then the
+                 value should be "user_managed"
 
+                 If the value is "user_managed", then, value for the variable
+                  "customer_root_key_crn" must be specified
+                DESC
 
+  validation {
+    condition     = ( var.encryption_type == "user_managed"  ||
+                      var.encryption_type == "provider_managed" )
 
+    error_message = "Value of encryption_type must be either user_managed or provider_managed."
+  }
+}
+
+variable "customer_root_key_crn" {
+  type        = string
+  default     = ""
+  description = <<-DESC
+                  CRN of the root key that is in the KMS instance
+                  created by the user. It can either be Key Protect
+                  or Hyper Protect Crypto Services(recommended)
+                DESC
+}
 
 # The options bellow should not need to be changed
 
