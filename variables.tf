@@ -39,6 +39,18 @@ variable "cos_bucket_name" {
   type        = string
 }
 
+variable "cos_resource_group" {
+  description = "Resource group of the COS instance"
+  type        = string
+  default     = "Default"
+}
+
+variable "cos_endpoint" {
+  description = "Endpoint of COS service"
+  type        = string
+  default     = ""
+}
+
 variable "encryption_type" {
   type        = string
   default     = "provider_managed"
@@ -109,4 +121,10 @@ variable "mover_image_name" {
 variable "mover_profile" {
   description = "image used for the VSI data mover"
   default = "bx2d-16x64"
+}
+
+variable "iam_endpoint_url" {
+    description = "IAM endpoint url"
+    type        = string
+    default     = "https://iam.cloud.ibm.com"
 }

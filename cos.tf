@@ -1,10 +1,10 @@
-# data "ibm_resource_group" "cos_group" {
-#   name = "cos-resource-group"
-# }
+data "ibm_resource_group" "cos_group" {
+  name = var.cos_resource_group
+}
 
 data "ibm_resource_instance" "cos_instance" {
   name              = var.cos_instance_name
-  #resource_group_id = data.ibm_resource_group.cos_group.id
+  resource_group_id = data.ibm_resource_group.cos_group.id
   service           = "cloud-object-storage"
 }
 

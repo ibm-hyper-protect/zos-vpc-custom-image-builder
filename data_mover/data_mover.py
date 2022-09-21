@@ -29,6 +29,7 @@ COS_INSTANCE_CRN = os.environ.get('cosInstanceCRN')
 COS_BUCKET_NAME = os.environ.get('cosBucketName')
 CUSTOM_IMAGE_NAME = os.environ.get('customImageName')
 CUSTOM_IMAGE_PATH = f"/volumes/qcow2/{CUSTOM_IMAGE_NAME}.qcow2"
+IAM_ENDPOINT = os.environ.get('iamEndpoint')
 
 METADATA_FILE = 'image-metadata.json'
 DEVMAP_FILE = 'devmap'
@@ -37,6 +38,7 @@ BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/' # Trailing slashes
 DATA_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'data/' # Trailing slashes
 
 cos = ibm_boto3.resource('s3',
+    ibm_auth_endpoint=IAM_ENDPOINT+"/identity/token",
     ibm_api_key_id=COS_API_KEY,
     ibm_service_instance_id=COS_INSTANCE_CRN,
     config=Config(signature_version='oauth'),
@@ -308,4 +310,4 @@ if __name__ == '__main__':
     subprocess.check_call(shlex.split(f"sync"))
 
 
-    
+
