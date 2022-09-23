@@ -23,11 +23,12 @@ write_files:
   content: ${filebase64(data.archive_file.data_mover.output_path)}
 - path: /tmp/data_mover.env
   content: |
-    cosEndpoint='https://${data.ibm_cos_bucket.cos_bucket.s3_endpoint_direct}'
+    cosEndpoint='${var.cos_endpoint == "" ? format("https://%s",data.ibm_cos_bucket.cos_bucket.s3_endpoint_direct) : var.cos_endpoint}'
     cosAPIKey='${sensitive(var.ibmcloud_api_key)}'
     cosInstanceCRN='${data.ibm_cos_bucket.cos_bucket.crn}'
     cosBucketName='${var.cos_bucket_name}'
     customImageName='${var.custom_image_name}'
+    iamEndpoint='${var.iam_endpoint_url}'
 EOF
   }
 
