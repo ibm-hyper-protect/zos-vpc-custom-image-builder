@@ -128,3 +128,11 @@ variable "iam_endpoint_url" {
     type        = string
     default     = "https://iam.cloud.ibm.com"
 }
+
+variable "profile" {
+  default = null # Default depends on os_type - see locals.tf
+}
+
+variable "os_type" {
+  default = "zlinux"
+}
