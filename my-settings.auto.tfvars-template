@@ -8,5 +8,6 @@ custom_image_name = "wazi-custom-image"
 
 region = "ca-tor"
 zone = "1"
+custom_vsi = false
 
 # Any other variable you want to set (see variables.tf)
