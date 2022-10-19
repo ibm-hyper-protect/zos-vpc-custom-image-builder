@@ -42,7 +42,7 @@ variable "cos_bucket_name" {
 variable "cos_resource_group" {
   description = "Resource group of the COS instance"
   type        = string
-  default     = "Default"
+  default     = "default"
 }
 
 variable "cos_endpoint" {
@@ -53,15 +53,19 @@ variable "cos_endpoint" {
 
 variable "encryption_type" {
   type        = string
-  default     = "provider_managed"
+  default     = "user_managed"
   description = <<-DESC
-                 If the value is "provider_managed", then the block storage
-                 volumes will be encrypted automatically with the key chosen
-                 by IBM. However, if the user wishes to use own keys, then the
-                 value should be "user_managed"
+                 If the value is 'user_managed', and 'customer_root_key_crn' 
+                 holds a valid root key CRN, then the block storage volume 
+                 will be encrypted by root key that is provided.
 
-                 If the value is "user_managed", then, value for the variable
-                  "customer_root_key_crn" must be specified
+                 If the value is "provider_managed", then the block storage 
+                 volume will be encrypted automatically with the key chosen 
+                 by IBM.
+
+                 NOTE: If the value is "user_managed", and the 
+                 'customer_root_key_crn' is blank(default value), 
+                 then, it defaults to 'provider_managed'.
                 DESC
 
   validation {
@@ -76,9 +80,12 @@ variable "customer_root_key_crn" {
   type        = string
   default     = ""
   description = <<-DESC
-                  CRN of the root key that is in the KMS instance
-                  created by the user. It can either be Key Protect
-                  or Hyper Protect Crypto Services(recommended)
+                  CRN of the root key that is in the KMS instance 
+                  created by the user. It can either be Key Protect 
+                  or Hyper Protect Crypto Services(**highly recommended**) 
+
+                  NOTE: Not giving any input for this will result in 
+                  'provider_managed' type to be used.
                 DESC
 }
 
@@ -96,13 +103,35 @@ variable "cos_bucket_type" {
   default = "region_location"
 }
 
-
-# Most likelly you do not need to change the values bellow
-
+# ssh private key to establish a session with data mover VSI
 variable "ssh_private_key" {
-  description = "path to private ssh for data mover VSI - if not set terraform will generate a random one" 
   type        = string
-  default     = null
+  default     = "null"
+  description = <<-DESC
+                  This is needed for terraform to establish a ssh session with 
+                  the VSI that is executing the data_mover script. Post 
+                  establishing the ssh session, it would wait for certain service 
+                  to be finished on the VSI, and that gives a go ahead to terraform 
+                  to create other resources. Because of this, there is no real need 
+                  to pass in a user generated ssh key, and it is recommended that 
+                  the default be used and, terraform will then create pair of keys 
+                  automatically
+                DESC
+}
+
+# This is needed to be passed-in while creating the data mover VSI
+variable "ssh_public_key" {
+  type        = string
+  default     = "null"
+  description = <<-DESC
+                  This is needed while creating an instance of data mover VSI. 
+                  When terraform establishes the ssh session with the VSI, 
+                  the passed-in private key is matched with this public key. 
+                  Because of this, there is no real need to pass in a user 
+                  generated ssh key, and it is recommended that the default 
+                  be used, and terraform will then create pair of keys 
+                  automatically
+                DESC
 }
 
 variable "total_ipv4_address_count" {
