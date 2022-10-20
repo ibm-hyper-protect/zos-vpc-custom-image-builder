@@ -34,6 +34,7 @@ IAM_ENDPOINT = os.environ.get('iamEndpoint')
 METADATA_FILE = 'image-metadata.json'
 DEVMAP_FILE = 'devmap'
 ENV_OVERRIDES_FILE = 'env-overrides'
+PROPERTIES_JSON_FILE = 'properties.json'
 VOLUME_DIRECTORIES = '/volumes/'
 BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/' # Trailing slashes
 DATA_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'data/' # Trailing slashes
@@ -48,7 +49,7 @@ cos = ibm_boto3.resource('s3',
 
 def copy_env_overrides_file():
     '''
-    Copy the env-overrides file, if it exists, to the boot volume
+    Copy the env-overrides file, if it exists, to the data volume
     '''
     env_overrides_exists = exists_in_bucket(COS_BUCKET_NAME, ENV_OVERRIDES_FILE)
     if env_overrides_exists:
@@ -56,6 +57,18 @@ def copy_env_overrides_file():
         with open(env_overrides_filename, 'wb') as file:
             file.write(get_item(COS_BUCKET_NAME, ENV_OVERRIDES_FILE).read())
         shutil.copy(env_overrides_filename, DATA_VOLUME_DIRECTORY)
+
+
+def copy_properties_file():
+    '''
+    Copy the properties.json file, if it exists, to the data volume
+    '''
+    properties_file_exists = exists_in_bucket(COS_BUCKET_NAME, PROPERTIES_JSON_FILE)
+    if properties_file_exists:
+        properties_filename = DATA_VOLUME_DIRECTORY + '../properties.json'
+        with open(properties_filename, 'wb') as file:
+            file.write(get_item(COS_BUCKET_NAME, PROPERTIES_JSON_FILE).read())
+        shutil.copy(properties_filename, DATA_VOLUME_DIRECTORY)
 
 
 def pull_metadata_file():
@@ -294,8 +307,9 @@ if __name__ == '__main__':
     # Define 5 concurrent processes to get the volume files with
     p = Pool(10)
 
-    # Copy the env-overrides file, if it exists
+    # Copy the env-overrides and/or properties.json files, if they exists in the COS bucket
     copy_env_overrides_file()
+    copy_properties_file()
 
     # Pull the metadata file from the COS bucket and get 
     # the boot volume and data volume names
