@@ -33,6 +33,7 @@ IAM_ENDPOINT = os.environ.get('iamEndpoint')
 
 METADATA_FILE = 'image-metadata.json'
 DEVMAP_FILE = 'devmap'
+ENV_OVERRIDES_FILE = 'env-overrides'
 VOLUME_DIRECTORIES = '/volumes/'
 BOOT_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'boot/' # Trailing slashes
 DATA_VOLUME_DIRECTORY = VOLUME_DIRECTORIES+'data/' # Trailing slashes
@@ -43,6 +44,18 @@ cos = ibm_boto3.resource('s3',
     ibm_service_instance_id=COS_INSTANCE_CRN,
     config=Config(signature_version='oauth'),
     endpoint_url=COS_ENDPOINT)
+
+
+def copy_env_overrides_file():
+    '''
+    Copy the env-overrides file, if it exists, to the boot volume
+    '''
+    env_overrides_exists = exists_in_bucket(COS_BUCKET_NAME, ENV_OVERRIDES_FILE)
+    if env_overrides_exists:
+        env_overrides_filename = DATA_VOLUME_DIRECTORY + '../env-overrides'
+        with open(env_overrides_filename, 'wb') as file:
+            file.write(get_item(COS_BUCKET_NAME, ENV_OVERRIDES_FILE).read())
+        shutil.copy(env_overrides_filename, DATA_VOLUME_DIRECTORY)
 
 
 def pull_metadata_file():
@@ -63,6 +76,23 @@ def pull_devmap():
     with open(volume + 'devmap', 'wb') as file:
         file.write(get_item(COS_BUCKET_NAME, DEVMAP_FILE).read())
     os.chown(volume + 'devmap', 999, 999)
+
+
+def exists_in_bucket(bucket_name, item_name):
+    '''
+    Validate that a given item name (file name) exists in the given bucket name.
+    '''
+    global bucket_contents
+    print('Checking if the item \'{1}\' exists in the bucket \'{0}\''.format(bucket_name, item_name))
+    try:
+        if item_name in get_bucket_contents(COS_BUCKET_NAME):
+            return True
+        else:
+            return False
+    except ClientError as ce:
+        exit('CLIENT ERROR: {0}\n'.format(ce))
+    except Exception as e:
+        exit('Unable to retrieve file contents: {0}'.format(e))
 
 
 def get_item(bucket_name, item_name):
@@ -263,6 +293,9 @@ if __name__ == '__main__':
 
     # Define 5 concurrent processes to get the volume files with
     p = Pool(10)
+
+    # Copy the env-overrides file, if it exists
+    copy_env_overrides_file()
 
     # Pull the metadata file from the COS bucket and get 
     # the boot volume and data volume names
