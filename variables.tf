@@ -55,17 +55,14 @@ variable "encryption_type" {
   type        = string
   default     = "user_managed"
   description = <<-DESC
-                 If the value is 'user_managed', and 'customer_root_key_crn' 
-                 holds a valid root key CRN, then the block storage volume 
-                 will be encrypted by root key that is provided.
+                 If the value is 'user_managed', and 'customer_root_key_crn' holds a valid 
+                 root key CRN, then the block storage volume and the snapshot will be 
+                 encrypted by root key that is provided. 
+                 If the value is "provider_managed", then the block storage volume and the 
+                 snapshot will be encrypted automatically with the key chosen by IBM. 
 
-                 If the value is "provider_managed", then the block storage 
-                 volume will be encrypted automatically with the key chosen 
-                 by IBM.
-
-                 NOTE: If the value is "user_managed", and the 
-                 'customer_root_key_crn' is blank(default value), 
-                 then, it defaults to 'provider_managed'.
+                 NOTE: If the value is "user_managed", and the 'customer_root_key_crn' 
+                 is blank(default value), then, it defaults to 'provider_managed'.
                 DESC
 
   validation {
@@ -80,12 +77,16 @@ variable "customer_root_key_crn" {
   type        = string
   default     = ""
   description = <<-DESC
-                  CRN of the root key that is in the KMS instance 
-                  created by the user. It can either be Key Protect 
-                  or Hyper Protect Crypto Services(**highly recommended**) 
+                  CRN of the root key that is in the KMS instance created by the user. 
+                  It can either be in Key Protect or Hyper Protect Crypto Services. 
+                  It is **highly recommended** that Hyper Protect Crypto Services be used. 
 
-                  NOTE: Not giving any input for this will result in 
-                  'provider_managed' type to be used.
+                  If the 'encryption_type' is 'user_managed', and 'customer_root_key_crn' 
+                  holds a valid root key CRN, then the block storage volume and the snapshot 
+                  will be encrypted by root key that is provided. 
+
+                  NOTE: Not giving any input for this will result in 'encryption_type' 
+                  defaulting to provider_managed'.
                 DESC
 }
 
