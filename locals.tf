@@ -9,7 +9,7 @@ locals {
 
   # This is used when the user chooses encryption_type as user_managed.
   # By default, it is null
-  volume_encryption_key_crn = ( var.encryption_type == "user_managed" ) ? var.customer_root_key_crn : ""
+  volume_encryption_key_crn = ( var.encryption_type == "provider_managed" || var.customer_root_key_crn == "null") ? "" : var.customer_root_key_crn
 }
 
 #Debug only

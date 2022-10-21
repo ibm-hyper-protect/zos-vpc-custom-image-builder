@@ -46,9 +46,9 @@ variable "cos_resource_group" {
 }
 
 variable "cos_endpoint" {
-  description = "Endpoint of COS service"
   type        = string
-  default     = ""
+  default     = "null"
+  description = "COS service Endpoint. By default, cos bucket s3 direct end point will be used"
 }
 
 variable "encryption_type" {
@@ -58,11 +58,12 @@ variable "encryption_type" {
                  If the value is 'user_managed', and 'customer_root_key_crn' holds a valid 
                  root key CRN, then the block storage volume and the snapshot will be 
                  encrypted by root key that is provided. 
+
                  If the value is "provider_managed", then the block storage volume and the 
                  snapshot will be encrypted automatically with the key chosen by IBM. 
 
                  NOTE: If the value is "user_managed", and the 'customer_root_key_crn' 
-                 is blank(default value), then, it defaults to 'provider_managed'.
+                 is having a default value of **null**, then, it defaults to 'provider_managed'
                 DESC
 
   validation {
@@ -75,7 +76,7 @@ variable "encryption_type" {
 
 variable "customer_root_key_crn" {
   type        = string
-  default     = ""
+  default     = "null"
   description = <<-DESC
                   CRN of the root key that is in the KMS instance created by the user. 
                   It can either be in Key Protect or Hyper Protect Crypto Services. 
@@ -85,8 +86,8 @@ variable "customer_root_key_crn" {
                   holds a valid root key CRN, then the block storage volume and the snapshot 
                   will be encrypted by root key that is provided. 
 
-                  NOTE: Not giving any input for this will result in 'encryption_type' 
-                  defaulting to provider_managed'.
+                  NOTE: Leaving the default value of **null** for this will result in 
+                  'encryption_type' defaulting to provider_managed'.
                 DESC
 }
 
