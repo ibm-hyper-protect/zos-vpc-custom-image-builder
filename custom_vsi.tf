@@ -73,7 +73,7 @@ resource "ibm_is_floating_ip" "testacc_floatingip" {
   target = ibm_is_instance.testacc_vsi[count.index].primary_network_interface[0].id
 }
 
-
+# Attach data volume
 resource "ibm_is_instance_volume_attachment" "example-snapshot-attach" {
   count = var.custom_vsi ? 1 : 0
   instance = ibm_is_instance.testacc_vsi[count.index].id
@@ -82,5 +82,5 @@ resource "ibm_is_instance_volume_attachment" "example-snapshot-attach" {
   snapshot = ibm_is_snapshot.custom_image_data.id
   delete_volume_on_attachment_delete = false
   delete_volume_on_instance_delete = true
-  volume_name = "${var.custom_image_name}-data-custom-test"
+  volume_name = "${var.custom_image_name}-custom-volume"
 }
