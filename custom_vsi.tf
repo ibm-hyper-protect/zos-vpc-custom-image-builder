@@ -54,7 +54,7 @@ resource "ibm_is_instance" "testacc_vsi" {
   count = var.custom_vsi ? 1 : 0
   name    = local.custom_vsi_name
   image   = ibm_is_image.custom_image.id
-  profile = local.profile
+  profile = var.mover_profile
 
   primary_network_interface {
     subnet          = ibm_is_subnet.testacc_subnet[count.index].id

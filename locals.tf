@@ -1,7 +1,6 @@
 locals {
   full_zone = "${var.region}-${var.zone}"
   mover_vsi_name = "${var.custom_image_name}-build"
-  profile = var.profile != null ? var.profile : (var.os_type=="zos" ? "mz2-2x16"      : "bz2-2x8")
   custom_vsi_name = "${var.custom_image_name}-custom"
   image_metadata_body = jsondecode(data.ibm_cos_bucket_object.image_metadata.body)
   image_metadata_boot_volumes = [for volume in local.image_metadata_body.volumes: volume if volume.boot]
