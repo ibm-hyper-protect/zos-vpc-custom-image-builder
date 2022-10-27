@@ -32,7 +32,7 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 
    This will create the VSI with the required data volumes. You might want to use the VSI serial console: the progress logs are written there by cloud init.
 
-Once compeleted successfully, the following can be observed as output:
+Once completed successfully, the following can be observed as output:
 
 - A bootable qcow2 image is uploaded to the IBM Cloud Object Storage bucket
 - A VPC block storage device, storing data volumes from the z/OS image, is created

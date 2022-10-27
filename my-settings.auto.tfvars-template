@@ -3,6 +3,7 @@ ibmcloud_api_key = "Your IBM Cloud API key"
 cos_instance_name = "Cloud Object Storage-xx"
 cos_bucket_name = "wazi-custom-image-bucket"
 cos_bucket_region = "ca-tor"
+cos_resource_group = "Default"
 
 custom_image_name = "wazi-custom-image"
 
