@@ -90,3 +90,7 @@ It is important to destroy the data mover after it has completed so you do not g
   - to build the qcow2 and data volume manualy: `cd /data-mover;./data-mover.py`
   - to upload the qcow2 to COS manualy: `cd /data-mover;./upload.py`
 - you can copy the cloud-init log output with `ssh -i private_key root@<floating IP of the VSI> cat /var/log/cloud-init-output.log`
+
+
+## End to End workflow showing the usecase of running an on-prem z/OS version on IBM Cloud
+![](https://github.com/ibm-hyper-protect/zos-vpc-custom-image-builder/blob/main/design-flows/sequence-diagram.png)
