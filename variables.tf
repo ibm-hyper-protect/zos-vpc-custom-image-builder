@@ -5,6 +5,11 @@ variable "custom_image_name" {
   default = "wazi-custom-image"
 }
 
+variable "custom_vsi"{
+  description = "Builds VSI using the custom image"
+  type = bool
+  default = true
+}
 variable "custom_image_os" {
   description = "OS for generated image - it must match the OS uploaded to COS"
   default = "zos-2-4-s390x-dev-test-byol"
