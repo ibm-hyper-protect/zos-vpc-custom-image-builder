@@ -42,7 +42,7 @@ variable "cos_bucket_name" {
 variable "cos_resource_group" {
   description = "Resource group of the COS instance"
   type        = string
-  default     = "default"
+  default     = "Default"
 }
 
 variable "cos_endpoint" {
