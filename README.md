@@ -18,6 +18,8 @@ This set of scripts and automation can be used in conjunction with Wazi Image Bu
 4. Clone this repo to your local machine
 5. Run `terraform init` from within this repo's directory
 
+NOTE: If you are using [Hyper Protect Crypto Services](https://www.ibm.com/cloud/hyper-protect-crypto) to encrypt the VPC Block storage volumes, please set up a Service-Service authorization in IAM  between Hyper Protect Crypto Services and VPC Block Storage prior to moving ahead.
+
 ## Running the data mover
 
 1. Use Wazi Image Builder to upload your z/OS image to IBM Cloud Object Store (COS)
