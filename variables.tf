@@ -9,6 +9,10 @@ variable "custom_vsi"{
   type        = bool
   default     = false
   description = "Builds VSI using the custom image"
+  validation {
+    condition = var.custom_vsi == false
+    error_message = "Cannot change the value of custom_vsi currently."
+  }
 }
 variable "custom_image_os" {
   default     = "zos-2-4-s390x-dev-test-byol"
@@ -129,12 +133,37 @@ variable "ssh_private_key" {
                 DESC
 }
 
+# ssh private key to establish a session with VSI created using the custom image
+variable "custom_vsi_ssh_private_key" {
+  type        = string
+  default     = "null"
+  description = <<-DESC
+                  This is needed for terraform to establish a ssh session with 
+                  the VSI that is created using the custom_image. 
+                DESC
+}
+
 # This is needed to be passed-in while creating the data mover VSI
 variable "ssh_public_key" {
   type        = string
   default     = "null"
   description = <<-DESC
                   This is needed while creating an instance of data mover VSI. 
+                  When terraform establishes the ssh session with the VSI, 
+                  the passed-in private key is matched with this public key. 
+                  Because of this, there is no real need to pass in a user 
+                  generated ssh key, and it is recommended that the default 
+                  be used, and terraform will then create pair of keys 
+                  automatically
+                DESC
+}
+
+# This is needed to be passed-in while creating the VSI using the custom image
+variable "custom_vsi_ssh_public_key" {
+  type        = string
+  default     = "null"
+  description = <<-DESC
+                  This is needed while creating an instance of VSI using the custom-image. 
                   When terraform establishes the ssh session with the VSI, 
                   the passed-in private key is matched with this public key. 
                   Because of this, there is no real need to pass in a user 
@@ -166,4 +195,9 @@ variable "iam_endpoint_url" {
     type        = string
     default     = "https://iam.cloud.ibm.com"
     description = "IAM endpoint url"
+}
+
+variable "custom_vsi_mover_profile" {
+  default     = "bz2-16x64"
+  description = "image used for the VSI data mover"
 }

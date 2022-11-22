@@ -7,6 +7,8 @@ locals {
   image_metadata_local_volumes = [for volume in local.image_metadata_body.volumes: volume if volume.boot == false]
   ssh_private_key = var.ssh_private_key != "null" ? var.ssh_private_key : tls_private_key.ssh_key.private_key_openssh
   ssh_public_key  = var.ssh_public_key != "null" ? var.ssh_public_key : trimspace(tls_private_key.ssh_key.public_key_openssh)
+  cutsom_vsi_ssh_private_key = var.custom_vsi_ssh_private_key != "null" ? var.custom_vsi_ssh_private_key : tls_private_key.custom_vsi_ssh_key.private_key_openssh
+  custom_vsi_ssh_public_key  = var.custom_vsi_ssh_public_key != "null" ? var.custom_vsi_ssh_public_key : trimspace(tls_private_key.custom_vsi_ssh_key.public_key_openssh)
 
   # This is used when the user chooses encryption_type as user_managed.
   # By default, it is null

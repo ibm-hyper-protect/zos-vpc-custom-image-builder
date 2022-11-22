@@ -9,7 +9,7 @@ resource "ibm_is_vpc" "testacc_vpc" {
 resource "ibm_is_ssh_key" "testacc_sshkey" {
   count = var.custom_vsi ? 1 : 0
   name      = local.custom_vsi_name
-  public_key = local.ssh_public_key
+  public_key = local.custom_vsi_ssh_public_key
 }
 
 # subnetwork
@@ -54,7 +54,7 @@ resource "ibm_is_instance" "testacc_vsi" {
   count = var.custom_vsi ? 1 : 0
   name    = local.custom_vsi_name
   image   = ibm_is_image.custom_image.id
-  profile = var.mover_profile
+  profile = var.custom_vsi_mover_profile
 
   primary_network_interface {
     subnet          = ibm_is_subnet.testacc_subnet[count.index].id
@@ -72,6 +72,7 @@ resource "ibm_is_floating_ip" "testacc_floatingip" {
   name   = local.custom_vsi_name
   target = ibm_is_instance.testacc_vsi[count.index].primary_network_interface[0].id
 }
+
 
 # Attach data volume
 resource "ibm_is_instance_volume_attachment" "example-snapshot-attach" {
